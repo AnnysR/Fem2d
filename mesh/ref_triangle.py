@@ -9,21 +9,21 @@ class Triangle:
         self.nodes = node_indices
         self.material = material
         self.mesh = mesh
-        self.area = self.compute_area()
-        
-    def compute_area(self):
+        self.area = self.computeArea()
+
+    def computeArea(self):
         raise NotImplementedError("Implement in subclass")
 
-    def stiffness_matrix(self):
+    def stiffnessMatrix(self):
         raise NotImplementedError("Implement in subclass")
     
-    def load_vector(self, f):
+    def loadVector(self, f):
         raise NotImplementedError("Implement in subclass")
         
 
 class P1Triangle(Triangle):
     
-    def compute_area(self):
+    def computeArea(self):
         p = self.mesh.points
         x1, y1 = p[self.nodes[0]]
         x2, y2 = p[self.nodes[1]]
@@ -33,7 +33,7 @@ class P1Triangle(Triangle):
                                          [1,x3,y3]]))
         return A
     
-    def stiffness_matrix(self):
+    def stiffnessMatrix(self):
         
         p = self.mesh.points
         x1, y1 = p[self.nodes[0]]
@@ -47,12 +47,12 @@ class P1Triangle(Triangle):
 
         # Coefficient c(x,y) center
         xc, yc = (x1 + x2 + x3)/3, (y1 + y2 + y3)/3
-        c_val = self.material.get_c(xc, yc)
+        c_val = self.material.getC(xc, yc)
 
         Ke = (c_val / (4*self.area)) * (np.outer(b,b) + np.outer(c_, c_))
         return Ke
     
-    def load_vector(self, f):
+    def loadVector(self, f):
         p = self.mesh.points
         x1, y1 = p[self.nodes[0]]
         x2, y2 = p[self.nodes[1]]

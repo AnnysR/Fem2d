@@ -4,22 +4,27 @@ from mesh.domain import Mesh2D
 from mesh.ref_triangle import P1Triangle
 from solver.solver import FEMSolver2D
 from physics.material import Material
+import numpy as np
 
 
 
 h = 0.05
-points = generatePoints2dRectangle(0, 1, 0, 1, h)
-mesh = Mesh2D(points)
+
+grid_points = generatePoints2dRectangle(-1, 1, -1, 1, h)
+
+
+
+mesh = Mesh2D(grid_points)
 mesh.plot()
 
 def f(x, y):
-    return 1.0
+    return np.sin(np.pi * x) * np.sin(np.pi * y)
 
-def c_function(x, y):
-    return 1.0
+def cFunction(x, y):
+    return 1
 
 
-material = Material(c_function)
+material = Material(cFunction)
 solver = FEMSolver2D(mesh, material, f, P1Triangle)
 
 solver.assemble()

@@ -1,8 +1,8 @@
 
 
 class Material:
-    def __init__(self, c_function):
-        self.c_function = c_function
-        
-    def get_c(self, x, y):
-        return self.c_function(x, y)
+    def __init__(self, cFunction):
+        self.cFunction = cFunction
+
+    def getC(self, x, y):
+        return self.cFunction(x, y)

@@ -21,9 +21,9 @@ class FEMSolver2D:
         
         for elem_nodes in self.mesh.elements:
             triangle = self.triangle_class(elem_nodes, self.material, self.mesh)
-            Ke = triangle.stiffness_matrix()
-            fe = triangle.load_vector(self.f)
-            
+            Ke = triangle.stiffnessMatrix()
+            fe = triangle.loadVector(self.f)
+
             for i_local, i_global in enumerate(elem_nodes):
                 GlobalLoad[i_global] += fe[i_local]
                 for j_local, j_global in enumerate(elem_nodes):
@@ -31,8 +31,8 @@ class FEMSolver2D:
 
         self.K = GlobalStiffness
         self.F = GlobalLoad
-    
-    def apply_dirichlet_bc(self, K, F, boundary_nodes):
+
+    def applyDirichletBC(self, K, F, boundary_nodes):
         n_nodes = self.mesh.points.shape[0]
         mask = np.ones(n_nodes, dtype=bool)
         mask[boundary_nodes] = False
@@ -43,7 +43,7 @@ class FEMSolver2D:
     def solve(self):
         if self.K is None or self.F is None:
             raise ValueError("System not assembled. Call assemble() before solve().")
-        K_bc, F_bc, mask = self.apply_dirichlet_bc(self.K, self.F, self.mesh.boundary_nodes)
+        K_bc, F_bc, mask = self.applyDirichletBC(self.K, self.F, self.mesh.boundary_nodes)
         u_reduced = np.linalg.solve(K_bc, F_bc)
         
         # Reconstruct full solution
