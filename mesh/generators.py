@@ -1,4 +1,6 @@
 import numpy as np
+from scipy.io import loadmat
+
 
 def generatePoints2dUnitSquare(h):
     if h <= 0 or h > 1:
@@ -27,6 +29,19 @@ def generatePoints2dRectangle(xmin, xmax, ymin, ymax, h):
 
     return points
 
+
+def getPointsFromMatFile(filename, mesh_index=0):
+    # Load points from a .mat file 
+    # first column is coordinate matrix, second column is element connectivity (triangles) and last column is connectivity (free edges)
+    mat_data = loadmat(filename)
+    data = mat_data['mesh']
+    print(f"Available meshes in file: {data.shape[0]}")
+    print(f"Using mesh index: {mesh_index}")
+    coords = (data[mesh_index][0])
+    elements = (data[mesh_index][1]) -1
+    edges = (data[mesh_index][2]) -1
+
+    return coords, elements, edges
 
 
 

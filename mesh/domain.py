@@ -4,13 +4,28 @@ import matplotlib.pyplot as plt
 
 
 class Mesh2D:
-    def __init__(self, points):
+    def __init__(self, points = None):
+        if points is None:
+            return
         self.points = self.removeNearDuplicates(np.asarray(points))
         self.tri = Delaunay(self.points)
         self.elements = self.tri.simplices
         self.edges = self._computeEdges()
         self.boundary_nodes = self.findBoundaryNodes()
 
+
+    def init_from_mat(self, coords, elements, free_edges):
+        self.points = self.removeNearDuplicates(np.asarray(coords))
+        self.elements = np.asarray(elements) 
+        self.edges = np.asarray(free_edges)
+        self.boundary_nodes = self.findBoundaryNodes()
+        
+        print("Mesh initialized from .mat file:")
+        print(f"  Number of points: {self.points.shape[0]}")
+        print(f"  Number of elements: {self.elements.shape[0]}")
+        print(f"  Number of edges: {self.edges.shape[0]}")
+        
+        
     def removeNearDuplicates(self, points, tol=1e-12):
         unique_points = []
         for p in points:

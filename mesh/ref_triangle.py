@@ -9,59 +9,73 @@ class Triangle:
         self.nodes = node_indices
         self.material = material
         self.mesh = mesh
+        self.J = self.computeJacobian()
         self.area = self.computeArea()
+        self.center = self.calculateCenter()
 
     def computeArea(self):
         raise NotImplementedError("Implement in subclass")
 
     def stiffnessMatrix(self):
         raise NotImplementedError("Implement in subclass")
-    
+
     def loadVector(self, f):
         raise NotImplementedError("Implement in subclass")
-        
+
+    def computeJacobian(self):
+        raise NotImplementedError("Implement in subclass")
+
+    def calculateCenter(self):
+        p = self.mesh.points
+        x_coords = [p[i][0] for i in self.nodes]
+        y_coords = [p[i][1] for i in self.nodes]
+        center_x = sum(x_coords) / len(self.nodes)
+        center_y = sum(y_coords) / len(self.nodes)
+        return np.array([center_x, center_y])
+
 
 class P1Triangle(Triangle):
-    
     def computeArea(self):
-        p = self.mesh.points
-        x1, y1 = p[self.nodes[0]]
-        x2, y2 = p[self.nodes[1]]
-        x3, y3 = p[self.nodes[2]]
-        A = 0.5 * np.linalg.det(np.array([[1,x1,y1],
-                                         [1,x2,y2],
-                                         [1,x3,y3]]))
+        A = 0.5 * np.linalg.det(self.J)
         return A
-    
+
+    def computeJacobian(self):
+        p = self.mesh.points
+        x1, y1 = p[self.nodes[0]]
+        x2, y2 = p[self.nodes[1]]
+        x3, y3 = p[self.nodes[2]]
+        J = np.array([[x2 - x1, x3 - x1], [y2 - y1, y3 - y1]])
+        return J
+
+
     def stiffnessMatrix(self):
-        
-        p = self.mesh.points
-        x1, y1 = p[self.nodes[0]]
-        x2, y2 = p[self.nodes[1]]
-        x3, y3 = p[self.nodes[2]]
+        # reference gradients (3×2)
+        dN_ref = np.array([[-1, -1], [1, 0], [0, 1]])
 
+        # inverse Jacobian
+        invJ = np.linalg.inv(self.J)
 
-        # grad of linear shape functions
-        b = np.array([y2 - y3, y3 - y1, y1 - y2])
-        c_ = np.array([x3 - x2, x1 - x3, x2 - x1])
+        # physical gradients (3×2)
+        dN = dN_ref @ invJ
 
-        # Coefficient c(x,y) center
-        xc, yc = (x1 + x2 + x3)/3, (y1 + y2 + y3)/3
-        c_val = self.material.getC(xc, yc)
+        c = self.material.cFunction(*self.center)
 
-        Ke = (c_val / (4*self.area)) * (np.outer(b,b) + np.outer(c_, c_))
-        return Ke
+        # stiffness matrix (3×3)
+        Ke = self.area * c * (dN @ dN.T)
     
-    def loadVector(self, f):
-        p = self.mesh.points
-        x1, y1 = p[self.nodes[0]]
-        x2, y2 = p[self.nodes[1]]
-        x3, y3 = p[self.nodes[2]]
 
-        # load vector (centre quadrature)
-        xc, yc = (x1 + x2 + x3)/3, (y1 + y2 + y3)/3
+        return Ke
+
+    def loadVector(self, f):
+        xc, yc = self.center
         fe = np.ones(3) * f(xc, yc) * self.area / 3
         return fe
-    
-    
-    
+
+    def triangleJacobian(self):
+        # jacobian of the transformation from reference triangle to physical triangle
+        p = self.mesh.points
+        x1, y1 = p[self.nodes[0]]
+        x2, y2 = p[self.nodes[1]]
+        x3, y3 = p[self.nodes[2]]
+        J = np.array([[x2 - x1, x3 - x1], [y2 - y1, y3 - y1]])
+        return J
